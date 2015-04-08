@@ -36,13 +36,32 @@ var RESTree = function () {
         this.nodes    = [];
         this.params   = [];
 
+        this.pipes = {
+            get: {
+                out: [],
+                in:  []
+            },
+            post: {
+                out: [],
+                in:  []
+            },
+            put: {
+                out: [],
+                in:  []
+            },
+            delete: {
+                out: [],
+                in:  []
+            }
+        };
+
         this.extractParams();
     };
 
     /**
      * Regular expression used to extract parameters from urls (http://domain/:version => version).
      */
-    Node.prototype.paramRegex = /:([a-zA-Z][a-zA-Z0-9_]*):/g;
+    Node.prototype.paramRegex = /{([a-zA-Z][a-zA-Z0-9_]*)}/g;
 
     /**
      * Creates one Node and adds it as a child.
@@ -61,6 +80,54 @@ var RESTree = function () {
 
         return this;
     };
+
+    /**
+     * Registers a given list of functions to the pipeline of execution.
+     *
+     * method : 'get', 'post', 'put', 'delete'
+     * line   : 'in' for incoming data, 'out' for outcoming data, 'error' for error handling on outcoming responses
+     * pipes  : list of functions to be used in order by the pipeline
+     */
+    Node.prototype.pipe = function (method, line, pipes) {
+        if (!this.pipes.hasOwnProperty(method))
+            throw new Error("The given method name '" + method + "' does not exist, use 'get', 'post', 'put' or 'delete'.");
+        else if (!this.pipes[method].hasOwnProperty(line))
+            throw new Error("The given line name '" + line + "' is not defined, use 'in', 'out' or 'error'");
+
+        for (var i = 0, length = pipes.length, next = pipes[i]; i < length; i++, next = pipes[i])
+            this.pipes[method][line].push(next);
+
+    },
+
+    /**
+     * Some sugar to be used instead of 'pipe' method, line fixed to 'in'.
+     *
+     * method : See 'pipe' method
+     * [...]  : functions to be used in the pipeline
+     */
+    Node.prototype.in = function (method) {
+        var pipes = [];
+
+        for (var i = 1, length = arguments.length; i < length; i++)
+            pipes.push(arguments[i]);
+
+        this.pipe(method, 'in', pipes);
+    },
+
+    /**
+     * Some sugar to be used instead of 'pipe' method, line fixed to 'out'.
+     *
+     * method : See 'pipe' method
+     * [...]  : functions to be used in the pipeline
+     */
+    Node.prototype.out = function (method) {
+        var pipes = [];
+
+        for (var i = 1, length = arguments.length; i < length; i++)
+            pipes.push(arguments[i]);
+
+        this.pipe(method, 'out', pipes);
+    },
 
     /**
      * Extracts the parameters from the location.
@@ -259,24 +326,33 @@ var RESTree = function () {
     /**
      * Executes a request using a XmlHttpRequest.
      */
-    ExecNode.prototype.request = function (method, urlParams) {
-        var pipeline, xhr, url;
+    ExecNode.prototype.request = function (method, query, data) {
+        var xhr, url, pipes;
 
-        url = this.mount(urlParams);
-        xhr = new XMLHttpRequest();
+        url   = this.mount(query);
+        pipes = this.node.pipes[method].out;
+        data  = JSON.stringify(executePipes(pipes, data));
+        xhr   = new XMLHttpRequest();
 
-        xhr.addEventListener("load", function (e) {
-            console.log(this);
-            console.log(e);
-        });
-
-        xhr.addEventListener("error", function (e) {
-            console.log(this);
-            console.log(e);
-        });
+        xhr.addEventListener("load", this.handleResponse);
 
         xhr.open(method, url);
-        xhr.send();
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.send(data);
+    }
+
+    ExecNode.prototype.handleResponse = function (event) {
+        console.log(JSON.parse(event.target.responseText));
+    }
+
+    function executePipes(pipes, data) {
+        if (!data) return undefined;
+
+        for(var i = 0, length = pipes.length; i < length; i++) {
+            data = pipes[i](data);
+        }
+
+        return data;
     }
 
     /**
@@ -290,4 +366,3 @@ var RESTree = function () {
     /*================ ANONYMOUS SELF EXECUTING FUNCTION BODY */
     return RESTree;
 }();
-
