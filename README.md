@@ -1,4 +1,4 @@
-# RESTree
+# RESTree (beta)
 ## An easy way to build an interface for your RESTful JSON API
 
 RESTree was built with the intent of not recreating XMLHttpRequest’s objects
@@ -12,8 +12,8 @@ Time to code!
 On your HTML:
 
 ```html
-<script src=”path/to/RESTree.js” type=”text/javascript>
-<script src=”path/to/myapi.js” type=”text/javascript”>
+<script src=”path/to/RESTree.js” type=”text/javascript”></script>
+<script src=”path/to/myapi.js” type=”text/javascript”></script>
 ```
 **myapi.js**
 ```javascript
@@ -22,4 +22,113 @@ var myapi = function () {
 }();
 ```
 
-Easy right?
+Easy, right?
+
+## Adding endpoints
+
+*add(name[, location])*
+
+Each endpoint of your API is one node of the tree.
+Suppose you have an endpoint **user** on a url like **user/{id}**, where
+**id** is a parameter of the location:
+
+```javascript
+config.add(‘user’, ‘user/{id}’);
+```
+If the **location** equals **name** and has no parameters, there is no
+need to set it. You may also chain **add** method:
+
+```javascript
+config
+    .add(‘user’, ‘user/{id}’)
+    .add(‘images’);
+```
+
+### Adding sub endpoints
+
+Suppose you want to add **images** endpoint to **user** endpoint:
+
+```javascript
+config.user
+    .add(‘images’);
+```
+
+## Pipelining
+
+Sometimes, the data you get from the API, is not on the format you would like it
+to be. Suppose you want to iterate over the data you receive, but the API gives you
+an object, not a list. Using **people** endpoint you get:
+
+```javascript
+{
+    “john”: [15, “male”],
+    “mary”: [18, “female”],
+    “lucas”: [3, “male”, “kid”]
+}
+```
+
+You would like this data as:
+
+```javascript
+[
+    [“john”, [15, “male”]],
+    [“mary”, [18, “female”]],
+    [“lucas”, [3, “male”, “kid”]]
+]
+```
+
+RESTree solves it, but how? You may chain functions to transform your data
+to the format you want. There are two pipelines, one for **in**coming data and one
+to **out**going data. Go to the next section!
+
+### Pipelining **in**coming data
+
+*in(method, callback1[, callback2[, callback3[,...]]])*
+
+The callback must be as follow:
+
+```javascript
+function callback(data) {
+    // transformation...
+    return tData;
+}
+```
+
+Using the last example, we would solve the problem as follow:
+
+```javascript
+function toList(data) {
+    var keys, tData;
+
+    tData = [];
+    keys = Object.keys(data);
+
+    //Ugly right? I preffer this over ‘Array.forEach()’, but you may use what you want :P
+    for (
+        var i = 0, 
+            length = keys.length, 
+            key = keys[i];
+        i < length;
+        i++,
+        key = keys[i]
+    ) {
+        tData.push([key, data[key]]);
+    }
+
+    return tData;
+}
+
+// code ...
+
+config.people.in(‘get’, toList);
+```
+
+When you **get** from **people** endpoint, **data** will be passed to
+**toList** method and will be transformed.
+
+### Pipelining **out**going data
+
+*out(method, callback1[, callback2[, callback3[,...]]])*
+
+Works just like **in** method, but the transformations will be done
+on request body instead of response data.
