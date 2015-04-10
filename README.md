@@ -104,7 +104,7 @@ function toList(data) {
     tData = [];
     keys = Object.keys(data);
 
-    //Ugly right? I preffer this over ‘Array.forEach()’, but you may use what you want
+    //Ugly right? I preffer this over ‘Array.forEach()’ for personal reasons
     for (
         var i = 0, 
             length = keys.length, 
@@ -150,7 +150,7 @@ The **json content-type** header is set by default.
 
 ## Getting and posting data (finally)
 
-After all that configuration stage, it time to use your API!
+After all that configuration stage, it’s time to use your API!
 But first, you must tell RESTree you are ready to go:
 
 ```javascript
@@ -166,7 +166,7 @@ var myapi = function () {
 You cannot add endpoints to the api from this point.
 Time to make requests.
 
-## Request
+### Request
 
 *request(method, query, data, success, fail)*
 
@@ -180,13 +180,73 @@ Time to make requests.
 
 **success**: (function) if the request is successful (2XX status code), **success** is called with status code and response data.
 
-**fail**: (function) if the request failed (4XX and 5XX status code), **fail** is called with status code and a possible response date (**in** pipeline not executed).
+**fail**: (function) if the request failed (4XX and 5XX status code), **fail** is 
+called with status code and a possible response date (**in** pipeline not executed).
 
 **somewhere on your code**
 ```javascript
-
-    //Getting from user/{id} endpoint, and printing the data
-    myapi.user({id: 99}).request(‘get’, null, null, function (status, data) {
-        console.log(data);
-    }, null);
+//Getting from user/{id} endpoint and printing the data
+myapi.user({id: 99}).request(‘get’, null, null, function (status, data) {
+    console.log(data);
+}, null);
 ```
+
+**Request** method is the low level method, and **should not be used** directly.
+In order to make it easier, there are four sugar methods to replace it.
+
+### Get
+
+*get(properties)*
+
+**properties**: (key/value object) see code below, everything is optional
+```javascript
+{
+    query: //as request query,
+    data: //as request data
+    success: //as request success
+    fail: //as request fail
+}
+```
+
+**somewhere on your code**
+```javascript
+//Getting from user/{id} endpoint and printing the data
+myapi
+    .user({id: 99})
+    .get({
+        success: function (status, data) {
+            console.log(data);
+        }
+    });
+
+// Much better right? Have any suggestions to improve this? Tell me!
+```
+
+### Post, Put and Delete
+
+*post(properties)*
+*put(properties)*
+*delete(properties)*
+
+Just like **get** method.
+
+## State of a node
+
+When using a node, you are actually using a copy of it. This
+is done in order to save the current query you are doing to the API.
+
+```javascript
+//Getting from user/{id} endpoint and printing the data
+
+var user99 = myapi.user({id: 99});
+
+user99
+    .get({
+        success: function (status, data) {
+            console.log(data);
+        }
+    });
+
+```
+
+# Suggestions? Want to contribute? Come now!
