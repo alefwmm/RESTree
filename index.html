@@ -6,20 +6,32 @@
     <body>
         <script src="RESTree.js" type="text/javascript"></script>
         <script type="text/javascript">
+
+            function addChanged(data) {
+                data.forEach(function (value) {
+                    value.title = "CHANGED: " + value.title;
+                });
+
+                return data;
+            }
+
             var api = RESTree('http://jsonplaceholder.typicode.com');
-            
+
             api
                 .add('posts')
                 .add('post', 'posts/{id}');
 
-                api.post.out('get', function (data) {
-                    data.data = "DDDD";
-                    return data;
-                });
+            api.posts.header('Authentication', 'Bearer ashesasa12341234213asdadsf');
+
+            api.posts.in('get', addChanged);
 
             var rest = api.compile();
 
-            rest.posts.request('get');
+            rest.posts.get({
+                success: function (data) {
+                    console.log(data);
+                }
+            });
         </script>
     </body>
 </html>

@@ -35,6 +35,7 @@ var RESTree = function () {
         this.parent   = parent;
         this.nodes    = [];
         this.params   = [];
+        this.headers  = {};
 
         this.pipes = {
             get: {
@@ -127,6 +128,31 @@ var RESTree = function () {
             pipes.push(arguments[i]);
 
         this.pipe(method, 'out', pipes);
+    },
+
+    /**
+     * (HIDDEN) Loads the default node headers in the given 'xhr' element.
+     *
+     * node : the node containing the necessary headers
+     * xhr  : the XMLHttpRequest object
+     */
+    function loadHeaders(node, xhr) {
+        var keys;
+
+        keys = Object.keys(node.headers);
+
+        for (var i = 0, length = keys.length, key = keys[i]; i < length; i++, key = keys[i])
+            xhr.setRequestHeader(key, node.headers[key]);
+    },
+
+    /**
+     * Registers a given header.
+     *
+     * key   : Header name ('Content-type')
+     * value : The value of the header ('application/json')
+     */
+    Node.prototype.header = function (key, value) {
+        this.headers[key] = value;
     },
 
     /**
@@ -325,8 +351,14 @@ var RESTree = function () {
 
     /**
      * Executes a request using a XmlHttpRequest.
+     *
+     * method : 'get', 'post', 'put' or 'delete'
+     * query  : object with key/value pairs, to mount url query
+     * data   : object with key/value pairs to be sent as body
+     * success: if the request is successful, this callback is called with data as first argument
+     * fail   : if the request failed, this callback is called with error status as first argument, and data as second
      */
-    ExecNode.prototype.request = function (method, query, data) {
+    ExecNode.prototype.request = function (method, query, data, success, fail) {
         var xhr, url, pipes;
 
         url   = this.mount(query);
@@ -334,17 +366,42 @@ var RESTree = function () {
         data  = JSON.stringify(executePipes(pipes, data));
         xhr   = new XMLHttpRequest();
 
-        xhr.addEventListener("load", this.handleResponse);
+        xhr.addEventListener("load", function (event) {
+            handleResponse(this.node, event, method, success, fail);
+        }.bind(this));
 
         xhr.open(method, url);
-        xhr.setRequestHeader("Content-type", "application/json");
+
+        xhr.setRequestHeader('Content-type', 'application/json');
+        loadHeaders(this.node, xhr);
+
         xhr.send(data);
-    }
+    },
 
-    ExecNode.prototype.handleResponse = function (event) {
-        console.log(JSON.parse(event.target.responseText));
-    }
+    /**
+     * (HIDDEN) Handles the response.
+     *
+     * arguments : take a look at request method
+     */
+    function handleResponse(node, event, method, success, fail) {
+        var data, pipes;
 
+        data = JSON.parse(event.target.responseText);
+        if (event.target.status >= 200 && event.target.status < 300) {
+            pipes = node.pipes[method].in;
+            data = executePipes(pipes, data);
+            if (success) success(data);
+        } else {
+            if (fail) fail(event.target.status, data);
+        }
+    },
+
+    /**
+     * (HIDDEN) Executes each transformation/pipeline function.  Returns the final result.
+     *
+     * pipes : the array of pipe functions
+     * data  : the data to be applied the transformation
+     */
     function executePipes(pipes, data) {
         if (!data) return undefined;
 
@@ -355,11 +412,24 @@ var RESTree = function () {
         return data;
     }
 
-    /**
-     * Executes GET request
-     */
-    ExecNode.prototype.get = function (urlParams) {
-        return this.mount(urlParams);
+    /*GET sugar for request method */
+    ExecNode.prototype.get = function (properties) {
+        return this.request('get', properties.query, properties.body, properties.success, properties.fail);
+    }
+
+    /*POST sugar for request method */
+    ExecNode.prototype.post = function (urlParams, data, success, fail) {
+        return this.request('post', properties.query, properties.body, properties.success, properties.fail);
+    }
+
+    /*PUT sugar for request method */
+    ExecNode.prototype.put = function (urlParams, data, success, fail) {
+        return this.request('put', properties.query, properties.body, properties.success, properties.fail);
+    }
+
+    /*DELETE sugar for request method */
+    ExecNode.prototype.delete = function (urlParams, data, success, fail) {
+        return this.request('delete', properties.query, properties.body, properties.success, properties.fail);
     }
 
 
