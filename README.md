@@ -1,3 +1,6 @@
+
+![alt text](https://github.com/alefwmm/RESTree/raw/master/logo.png “RESTree logotype”)
+
 # RESTree (beta)
 ## An easy way to build an interface for your RESTful JSON API
 
