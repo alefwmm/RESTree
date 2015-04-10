@@ -98,7 +98,7 @@ var RESTree = function () {
         for (var i = 0, length = pipes.length, next = pipes[i]; i < length; i++, next = pipes[i])
             this.pipes[method][line].push(next);
 
-    },
+    };
 
     /**
      * Some sugar to be used instead of 'pipe' method, line fixed to 'in'.
@@ -113,7 +113,7 @@ var RESTree = function () {
             pipes.push(arguments[i]);
 
         this.pipe(method, 'in', pipes);
-    },
+    };
 
     /**
      * Some sugar to be used instead of 'pipe' method, line fixed to 'out'.
@@ -128,7 +128,7 @@ var RESTree = function () {
             pipes.push(arguments[i]);
 
         this.pipe(method, 'out', pipes);
-    },
+    };
 
     /**
      * (HIDDEN) Loads the default node headers in the given 'xhr' element.
@@ -137,13 +137,21 @@ var RESTree = function () {
      * xhr  : the XMLHttpRequest object
      */
     function loadHeaders(node, xhr) {
-        var keys;
+        var keys, nodes;
 
-        keys = Object.keys(node.headers);
+        nodes = [];
 
-        for (var i = 0, length = keys.length, key = keys[i]; i < length; i++, key = keys[i])
-            xhr.setRequestHeader(key, node.headers[key]);
-    },
+        while (node) {
+            nodes.unshift(node);
+            node = node.parent;
+        }
+
+        while (node = nodes.shift()) {
+            keys = Object.keys(node.headers);
+            for (var i = 0, length = keys.length, key = keys[i]; i < length; i++, key = keys[i])
+                xhr.setRequestHeader(key, node.headers[key]);
+        }
+    };
 
     /**
      * Registers a given header.
@@ -153,7 +161,7 @@ var RESTree = function () {
      */
     Node.prototype.header = function (key, value) {
         this.headers[key] = value;
-    },
+    };
 
     /**
      * Extracts the parameters from the location.
@@ -163,7 +171,7 @@ var RESTree = function () {
 
         while(match = this.paramRegex.exec(this.location))
             this.params.push(match[1]);
-    }
+    };
 
     /**
      * Parses the local location given the data object, and returns it.
@@ -192,7 +200,7 @@ var RESTree = function () {
         }
 
         return location;
-    }
+    };
 
     /**
      * Compiles the tree into an execution tree. This method should be called when the configuration of
@@ -256,7 +264,7 @@ var RESTree = function () {
         }
 
         return root.branch(null);
-    }
+    };
 
     /**
      * ExecNode contructor
@@ -310,7 +318,7 @@ var RESTree = function () {
         }
 
         return caller;
-    }
+    };
 
     /**
      * (HIDDEN) Helper function. This will create a new branch everytime you access an ExecNode.
@@ -347,7 +355,7 @@ var RESTree = function () {
         }
 
         return url;
-    }
+    };
 
     /**
      * Executes a request using a XmlHttpRequest.
@@ -376,7 +384,7 @@ var RESTree = function () {
         loadHeaders(this.node, xhr);
 
         xhr.send(data);
-    },
+    };
 
     /**
      * (HIDDEN) Handles the response.
@@ -384,17 +392,19 @@ var RESTree = function () {
      * arguments : take a look at request method
      */
     function handleResponse(node, event, method, success, fail) {
-        var data, pipes;
+        var data, status, pipes;
 
         data = JSON.parse(event.target.responseText);
-        if (event.target.status >= 200 && event.target.status < 300) {
+        status = event.target.status;
+
+        if (status >= 200 && status < 300) {
             pipes = node.pipes[method].in;
             data = executePipes(pipes, data);
-            if (success) success(data);
+            if (success) success(status, data);
         } else {
-            if (fail) fail(event.target.status, data);
+            if (fail) fail(status, data);
         }
-    },
+    }
 
     /**
      * (HIDDEN) Executes each transformation/pipeline function.  Returns the final result.
@@ -415,22 +425,22 @@ var RESTree = function () {
     /*GET sugar for request method */
     ExecNode.prototype.get = function (properties) {
         return this.request('get', properties.query, properties.body, properties.success, properties.fail);
-    }
+    };
 
     /*POST sugar for request method */
     ExecNode.prototype.post = function (urlParams, data, success, fail) {
         return this.request('post', properties.query, properties.body, properties.success, properties.fail);
-    }
+    };
 
     /*PUT sugar for request method */
     ExecNode.prototype.put = function (urlParams, data, success, fail) {
         return this.request('put', properties.query, properties.body, properties.success, properties.fail);
-    }
+    };
 
     /*DELETE sugar for request method */
     ExecNode.prototype.delete = function (urlParams, data, success, fail) {
         return this.request('delete', properties.query, properties.body, properties.success, properties.fail);
-    }
+    };
 
 
     /*================ ANONYMOUS SELF EXECUTING FUNCTION BODY */

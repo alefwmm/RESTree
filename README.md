@@ -104,7 +104,7 @@ function toList(data) {
     tData = [];
     keys = Object.keys(data);
 
-    //Ugly right? I preffer this over ‘Array.forEach()’, but you may use what you want :P
+    //Ugly right? I preffer this over ‘Array.forEach()’, but you may use what you want
     for (
         var i = 0, 
             length = keys.length, 
@@ -133,3 +133,60 @@ When you **get** from **people** endpoint, **data** will be passed to
 
 Works just like **in** method, but the transformations will be done
 on request body instead of response data.
+
+## Setting default Request Headers
+
+*header(name, value)*
+
+You may want to set default request headers to an endpoint, like
+**authentication** headers:
+
+```javascript
+config.header(“Authentication”, “Bearer c21hcnQsIGFyZW4ndCB5b3U/”)
+```
+
+All sub nodes of a given node will have its parents headers.
+The **json content-type** header is set by default.
+
+## Getting and posting data (finally)
+
+After all that configuration stage, it time to use your API!
+But first, you must tell RESTree you are ready to go:
+
+```javascript
+var myapi = function () {
+    var config = RESTree(“http://domain/api/root”);
+    
+    // All configuration code here ...
+
+    return config.compile();
+}();
+```
+
+You cannot add endpoints to the api from this point.
+Time to make requests.
+
+## Request
+
+*request(method, query, data, success, fail)*
+
+**method**: (string) **get**, **post**, **put** or **delete**
+
+**query**: (key/value object) used to mount url parameters
+
+> {reference: “week”, start: “2015-01-03”} => ?reference=week&start=2015-01-03
+
+**data**: (key/value object) sent as JSON in request body
+
+**success**: (function) if the request is successful (2XX status code), **success** is called with status code and response data.
+
+**fail**: (function) if the request failed (4XX and 5XX status code), **fail** is called with status code and a possible response date (**in** pipeline not executed).
+
+**somewhere on your code**
+```javascript
+
+    //Getting from user/{id} endpoint, and printing the data
+    myapi.user({id: 99}).request(‘get’, null, null, function (status, data) {
+        console.log(data);
+    }, null);
+```

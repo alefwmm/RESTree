@@ -21,6 +21,8 @@
                 .add('posts')
                 .add('post', 'posts/{id}');
 
+            api.header('X-God', 'Deus Ex Machina');
+            api.header('Authentication', 'Bearer ashesasa12341234213asdadsf');
             api.posts.header('Authentication', 'Bearer ashesasa12341234213asdadsf');
 
             api.posts.in('get', addChanged);
