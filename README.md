@@ -15,6 +15,7 @@ On your HTML:
 <script src=”path/to/RESTree.js” type=”text/javascript”></script>
 <script src=”path/to/myapi.js” type=”text/javascript”></script>
 ```
+
 **myapi.js**
 ```javascript
 var myapi = function () {
