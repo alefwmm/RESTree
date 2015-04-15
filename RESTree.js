@@ -12,6 +12,7 @@
  */
 
 'use strict';
+if (!window.RESTree) {
 
 var RESTree = function () {
 
@@ -446,3 +447,6 @@ var RESTree = function () {
     /*================ ANONYMOUS SELF EXECUTING FUNCTION BODY */
     return RESTree;
 }();
+
+window.RESTree = RESTree;
+}
