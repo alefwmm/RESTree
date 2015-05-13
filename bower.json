@@ -1,0 +1,23 @@
+{
+  "name": "RESTree",
+  "version": "0.0.1",
+  "homepage": "https://github.com/alefwmm/RESTree",
+  "authors": [
+    "Álef Miranda <alefwmm@gmail.com>"
+  ],
+  "description": "An easy way to build an interface for your RESTful JSON API",
+  "main": "dist/RESTree.min.js",
+  "keywords": [
+    "JSON",
+    "REST",
+    "API"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

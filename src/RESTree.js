@@ -13,8 +13,7 @@
 
 'use strict';
 if (!window.RESTree) {
-    window.RESTree = true;
-    var RESTree = function () {
+    window.RESTree = function () {
 
         /**
          * Creates an intance of Node. This instance is the root of the tree.
