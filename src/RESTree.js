@@ -347,6 +347,8 @@ if (!window.RESTree) {
             if (urlParams) {
                 keys = Object.keys(urlParams);
 
+                if (!keys.length) return url;
+
                 param = keys.shift();
                 url += "?" + param + "=" + encodeURIComponent(urlParams[param]);
 
