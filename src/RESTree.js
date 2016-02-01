@@ -386,6 +386,8 @@ if (!window.RESTree) {
             loadHeaders(this.node, xhr);
 
             xhr.send(data);
+
+            return xhr;
         };
 
         /**
